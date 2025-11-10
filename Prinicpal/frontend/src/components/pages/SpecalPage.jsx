@@ -10,7 +10,7 @@ function SpecialPage() {
   const toastWarningMessage = useRef(false); //for toast notification rendering once
 
   useEffect(() => {
-    document.title = "Login System - Special Page"; //dinamically changes the tittle
+    document.title = "Buspã esquisita"; //dinamically changes the tittle
     //this function will be called after the component is rendered
     const checkIfToken = localStorage.getItem("token"); //check for token
     if (!checkIfToken || checkIfToken === null) {
@@ -32,11 +32,7 @@ function SpecialPage() {
     <>
       <div className={styles.container}>
         <div id={styles.div}>
-          <h1 id={styles.h1}>Página Especial</h1>
-          <hr />
-          <p id={styles.p}>
-            Esta é a página especial que só pode ser acessada com um token.
-          </p>
+          <h1 id={styles.h1}>BUSPÃ</h1>
         </div>
       </div>
     </>

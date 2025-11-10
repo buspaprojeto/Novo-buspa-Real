@@ -13,7 +13,7 @@ function LoginPage() {
   const history = useHistory(); //for dinamically changing the path
 
   useEffect(() => {
-    document.title = "Login System - LogIn Page"; //dinamically changes the tittle
+    document.title = "Login no buspã"; //dinamically changes the tittle
   });
 
   //login function with axios

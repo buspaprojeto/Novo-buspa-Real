@@ -1,6 +1,35 @@
 //importing neccessary functions and libraries to be using in the controller functions
 const bcrypt = require("bcryptjs"); //for hashing user's password
 const token = require("../utils/jwt");
+const tableName = process.env.DB_TABLENAME || "users";
+
+//helper function to promisify sqlite run/get operations
+const dbRun = (db, sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function(err) {
+      if (err) reject(err);
+      else resolve({ lastID: this.lastID, changes: this.changes });
+    });
+  });
+};
+
+const dbGet = (db, sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+};
+
+const dbAll = (db, sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+};
 
 //async await signup function which checks if all the input fields are filled then hashes the password to save it in the database using a query
 const SignUpController = async (req, res) => {
@@ -22,26 +51,22 @@ const SignUpController = async (req, res) => {
   //using try catch block from here for using await keyword
   try {
     //checking if user with same username exists
-    const [
-      checkUsername
-    ] = await req.pool.query(
-      `SELECT COUNT(*) AS count FROM ${process.env
-        .DB_TABLENAME} WHERE username = ?`,
+    const checkUsername = await dbGet(
+      req.db,
+      `SELECT COUNT(*) AS count FROM ${tableName} WHERE username = ?`,
       [username]
     );
-    if (checkUsername[0].count > 0) {
+    if (checkUsername.count > 0) {
       return res.status(400).send("User with same username already exists");
     }
 
     //checking if user with same email exists
-    const [
-      checkEmail
-    ] = await req.pool.query(
-      `SELECT COUNT(*) AS count FROM ${process.env
-        .DB_TABLENAME} WHERE email = ?`,
+    const checkEmail = await dbGet(
+      req.db,
+      `SELECT COUNT(*) AS count FROM ${tableName} WHERE email = ?`,
       [email]
     );
-    if (checkEmail[0].count > 0) {
+    if (checkEmail.count > 0) {
       return res.status(400).send("User with same email already exists");
     }
 
@@ -52,15 +77,14 @@ const SignUpController = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     //inserting the user
-    const [insertUser] = await req.pool.query(
-      `INSERT INTO \`${process.env
-        .DB_TABLENAME}\` (username, email, password) VALUES (?, ?, ?)`,
+    const insertUser = await dbRun(
+      req.db,
+      `INSERT INTO ${tableName} (username, email, password) VALUES (?, ?, ?)`,
       [username, email, hashedPassword]
     );
 
     //sending a success response
-    // res.send("User Created");
-    res.status(201).json({ id: insertUser.insertId, username, email });
+    res.status(201).json({ id: insertUser.lastID, username, email });
   } catch (error) {
     // basic error handling
     console.error("Error during signup:", error); // log the error
@@ -81,35 +105,30 @@ const LoginController = async (req, res) => {
   //using try catch block from here for using await keyword
   try {
     //checking if user with same username exists
-    const [
-      checkUsername
-    ] = await req.pool.query(
-      `SELECT COUNT(*) AS count FROM ${process.env
-        .DB_TABLENAME} WHERE username = ?`,
+    const checkUsername = await dbGet(
+      req.db,
+      `SELECT COUNT(*) AS count FROM ${tableName} WHERE username = ?`,
       [username]
     );
-    if (checkUsername[0].count === 0) {
+    if (checkUsername.count === 0) {
       return res.status(400).send("User with this username doesn't exist");
     }
 
     //selecting the user with the same username
-    const [checkUserpassword] = await req.pool.query(
-      `SELECT * FROM ${process.env.DB_TABLENAME} WHERE username = ?`,
+    const foundUser = await dbGet(
+      req.db,
+      `SELECT * FROM ${tableName} WHERE username = ?`,
       [username]
     );
-    //the first user is the only user with the same username
-    const foundUser = checkUserpassword[0];
 
     //comparing the password with the hashed password in the database
     const matchPassword = await bcrypt.compare(password, foundUser.password);
-
-    //if we dont get any error or the matchPassword doen't return false, now we continue with sending a json web token to the user
 
     //if the matchpassword returns false
     if (!matchPassword) {
       return res.status(401).send("Incorrect Password");
     } else {
-      res.status(200)
+      res.status(200);
       //more information about the token function in utils/jwt
       token(foundUser, res);
     }

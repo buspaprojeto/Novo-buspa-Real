@@ -28,15 +28,15 @@ app.use(express.urlencoded({ extended: true }));
 
 //creating a IIFE async await function for starting the database connection function as soon as possible and passing it down to the routes and starting the server after it
 
-let pool; // initialize the database connection pool
+let db; // initialize the database connection
 
 (async () => {
-  //calling the database connection function while declaring it in the pool variable
-  pool = await DBConn();
+  //calling the database connection function while declaring it in the db variable
+  db = await DBConn();
 
-  // pass the pool to the routes
+  // pass the db to the routes
   app.use((req, res, next) => {
-    req.pool = pool;
+    req.db = db;
     next();
   });
 

@@ -14,7 +14,7 @@ function SignupPage() {
   const history = useHistory(); //for dinamically changing the path
 
   useEffect(() => {
-    document.title = "Login System - SignUp Page"; //dinamically changes the tittle
+    document.title = "Buspã Cadastro"; //dinamically changes the tittle
   });
 
   //axios post function which will first check for valid input, send a post request and then use sonner to render a toast notification

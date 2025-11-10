@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 //404 page component function start
 function Page() {
   useEffect(() => {
-    document.title = "Login System - 404 Page"; //dinamically changes the tittle
+    document.title = "Buspã 404"; //dinamically changes the tittle
   });
   return (
     <>
